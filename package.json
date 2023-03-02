@@ -1,0 +1,23 @@
+{
+  "name": "labecommerce-backend",
+  "version": "1.0.0",
+  "description": "Preojeto labecommerce backend",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "par-impar": "node par-impar.js",
+    "jokenpo": "node jokenpo.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RenanMaruffa/labecommerce-backend.git"
+  },
+  "author": "Renan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RenanMaruffa/labecommerce-backend/issues"
+  },
+  "homepage": "https://github.com/RenanMaruffa/labecommerce-backend#readme"
+}
