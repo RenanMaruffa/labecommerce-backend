@@ -10,7 +10,13 @@ export const user: Tcliente[] = [
     {
         id: "u002",
         email: "cliente2@laala.com",
-        password: "123456"
+        password: "1234567"
+
+    },
+    {
+        id: "u003",
+        email: "cliente3@laala.com",
+        password: "12345678"
 
     }
 ];
@@ -44,16 +50,22 @@ export const products: Tproduto[] = [
 
 export const purchase: Tcompra[] = [
     {
-        userId: "001",
+        userId: "u001",
         productId: "p001",
-        quantity: 1,
-        totalPrice: 25.000
+        quantity: 2,
+        totalPrice: 50.000
     },
     {
         userId: "u002",
         productId: "p002",
         quantity: 1,
         totalPrice: 95.000
+    },
+    {
+        userId: "u003",
+        productId: "p004",
+        quantity: 2,
+        totalPrice: 10.000
     }
 ];
 
@@ -65,7 +77,7 @@ function createUser(id: string, email: string, password: string) {
     console.log("Cadastro de usuario realizado com sucesso!");
 };
 
-createUser("003", "renan@lala.com", "goku")
+createUser("u004", "renan@lala.com", "goku")
 
 export function getAllUsers() {
     console.log(user);
