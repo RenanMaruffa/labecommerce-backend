@@ -88,3 +88,38 @@ SELECT * FROM products
 WHERE price >= 100.00
 AND price <= 300.00
 ORDER BY price ASC;
+
+CREATE TABLE purchases (
+    id TEXT UNIQUE PRIMARY KEY NOT NULL,
+    total_price REAL NOT NULL,
+    paid INTEGER NOT NULL,
+    delivered_at TEXT,
+    buyer_id TEXT NOT NULL,
+    FOREIGN KEY (buyer_id) REFERENCES users (id)
+);
+
+-- A coluna paid será utilizada para guardar uma lógica booleana. O SQLite recomenda o uso do número 0 para false e 1 para true
+-- Os pedidos começam com paid valendo 0 (você irá definir isso quando for popular a tabela com o INSERT).
+-- A coluna delivered_at será utilizada para gerenciar a data de entrega do pedido. Ela é opcional, porque sempre começará sem valor ao criar um pedido, ou seja, null.
+-- O SQLite recomenda utilizar TEXT para lidar com strings no formato ISO8601 "aaaa-mm-dd hh:mm:sss". Lembre-se da existência da função nativa DATETIME para gerar datas nesse formato.
+
+SELECT * FROM purchases;
+
+INSERT INTO purchases VALUES
+("PC001", 250.000, 0, NULL, "U001"),
+("PC002", 95.000, 1, NULL, "U001"),
+("PC003", 15.000, 1, NULL, "U002"),
+("PC004", 15.000, 1, NULL, "U002"),
+("PC005", 5.000, 1, NULL, "U003"),
+("PC006", 125.000, 1, NULL, "U003");
+
+UPDATE purchases SET
+delivered_at = "15/04/2023"
+WHERE id = "PC001";
+
+--Resolver DATETIME
+
+SELECT * FROM purchases
+INNER JOIN users
+ON purchases.buyer_id = users.id
+WHERE users.id = "U001";
