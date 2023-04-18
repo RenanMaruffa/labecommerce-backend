@@ -105,21 +105,52 @@ CREATE TABLE purchases (
 
 SELECT * FROM purchases;
 
-INSERT INTO purchases VALUES
-("PC001", 250.000, 0, NULL, "U001"),
-("PC002", 95.000, 1, NULL, "U001"),
-("PC003", 15.000, 1, NULL, "U002"),
-("PC004", 15.000, 1, NULL, "U002"),
-("PC005", 5.000, 1, NULL, "U003"),
-("PC006", 125.000, 1, NULL, "U003");
+INSERT INTO purchases (id, total_price, paid, buyer_id) VALUES
+("PC001", 250.000, 0, "U001"),
+("PC002", 95.000, 1, "U001"),
+("PC003", 15.000, 1, "U002"),
+("PC004", 15.000, 1, "U002"),
+("PC005", 5.000, 1, "U003"),
+("PC006", 125.000, 1, "U003");
 
 UPDATE purchases SET
-delivered_at = "15/04/2023"
+delivered_at = (DATETIME())
 WHERE id = "PC001";
-
---Resolver DATETIME
 
 SELECT * FROM purchases
 INNER JOIN users
 ON purchases.buyer_id = users.id
 WHERE users.id = "U001";
+
+CREATE TABLE purchases_products(
+    purchase_id TEXT NOT NULL,
+    product_id TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    FOREIGN KEY (purchase_id) REFERENCES purchases(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+SELECT * FROM purchases_products;
+
+INSERT INTO purchases_products VALUES 
+("PC001", "P001", 2),
+("PC002", "P002", 1),
+("PC003", "P005", 1),
+("PC004", "P003", 1),
+("PC005", "P004", 1),
+("PC006", "P001", 1);
+
+-- ON FOREIGN KEY = PRIMARY KEY
+
+SELECT * FROM purchases_products
+INNER JOIN products ON purchases_products.product_id = products.id
+INNER JOIN purchases ON purchases_products.purchase_id = purchases.id
+INNER JOIN users ON purchases.buyer_id = users.id;
+
+
+
+
+
+
+
+

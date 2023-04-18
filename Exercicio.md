@@ -7,43 +7,52 @@ b) Além disso, você deve criar um README.md para seu repositório, explicando 
 -----------------------------------------------------
 
 
-Exercício 1
-Agora que sabemos como implementar relações do tipo 1:m e 1:1, vamos refatorar a estrutura do Labecommerce!
-Por ora não precisaremos editar as tabelas já existentes (users e products). Nosso objetivo hoje é criar a tabela de pedidos (purchases).
-Na próxima aula veremos como criar a lógica para adicionar produtos em uma ordem de pedido.
+# Exercício 1
+Agora que sabemos como criar relações m:n, é possível implementar a tabela de relações entre produtos e pedidos.<br>
 
-Criação da tabela de pedidos
+## Criação da tabela de relações
+- nome da tabela: **purchases_products**
+- colunas da tabela:
+  - purchase_id (TEXT e obrigatório, não deve ser único)
+  - product_id (TEXT e obrigatório, não deve ser único)
+  - quantity (INTEGER e obrigatório, não deve ser único)
 
-nome da tabela: purchases
+### Como essa lógica funciona?
+Cada compra é registrada uma única vez na tabela purchases. <br>
+Cada produto da mesma compra é registrado uma única vez na tabela purchases_products. <br><br>
+Exemplo: <br>
+Uma pessoa coloca 5 laranjas (p001) e 3 bananas (p002) no carrinho e confirma sua compra.
 
-colunas da tabela:
-id (TEXT, PK, único e obrigatório)
-total_price (REAL e obrigatório)
-paid (INTEGER e obrigatório)
-created_at (TEXT e opcional)
-buyer_id (TEXT, obrigatório e FK = referencia a coluna id da tabela users)
+- a compra é registrada com id c001 na tabela **purchases**
+- a seguir, cada item do carrinho é registrado na tabela **purchases_products**
+  - 5 laranjas são registradas na tabela purchases_products (c001, p001, 5)
+  - 3 bananas são registradas na tabela purchases_products (c001, p002, 3)
 
-Observações
-A coluna paid será utilizada para guardar uma lógica booleana. O SQLite recomenda o uso do número 0 para false e 1 para true.
+  Exercício 2
+Com a tabela de relações criada podemos finalmente realizar compras no banco de dados!
 
-Os pedidos começam com paid valendo 0 (você irá definir isso quando for popular a tabela com o INSERT).
+Inserção dos dados
+Popule sua tabela purchases_products simulando 3 compras de clientes.
 
-A coluna delivered_at será utilizada para gerenciar a data de entrega do pedido. Ela é opcional, porque sempre começará sem valor ao criar um pedido, ou seja, null.
+Consulta com junção INNER JOIN
+Mostre em uma query todas as colunas das tabelas relacionadas (purchases_products, purchases e products).
 
-O SQLite recomenda utilizar TEXT para lidar com strings no formato ISO8601 "aaaa-mm-dd hh:mm:sss". Lembre-se da existência da função nativa DATETIME para gerar datas nesse formato.
+Exercício 3
+Conforme evoluímos no conhecimento em SQL e SQLite, e também no contexto do negócio (e-commerce), percebemos algumas falhas ao longo do processo. Utilize esse tempo para refatorar sua modelagem.
 
-Exercício 2
-Popule sua tabela de pedidos, criada no exercício anterior.
-Por enquanto não se preocupe em adicionar produtos ao pedido, veremos isso na aula que vem.
-Com isso em mente, crie um valor aleatório para o preço total do pedido.
+Lembre-se que o recomendado no SQLite acerca de edição de tabelas é a recriação do zero.
+Ainda bem que você não deletou suas queries antigas, não é mesmo?
 
-a) Crie dois pedidos para cada usuário cadastrado
-No mínimo 4 no total (ou seja, pelo menos 2 usuários diferentes) e devem iniciar com a data de entrega nula.
+A vantagem em estarmos utilizando o SQLite é que você não precisa deletar todo o trabalho já feito, basta criar um novo arquivo .db e começar de novo por ele.
 
-b) Edite o status da data de entrega de um pedido
-Simule que o pedido foi entregue no exato momento da sua edição (ou seja, data atual).
+Diagrama
+É comum desenvolver diagramas para representar a modelagem do banco de dados, definindo visualmente todas as tabelas, colunas e relações para facilitar a leitura e entendimento do projeto.
 
-# Exercício 3
-Crie a query de consulta utilizando junção para simular um endpoint de histórico de compras de um determinado usuário.
+Olha só um exemplo de modelagem visual do Labecommerce!
 
-Mocke um valor para a id do comprador, ela deve ser uma das que foram utilizadas no exercício 2.
+image
+
+Você pode conferir como ele foi montado acessando o link: https://dbdiagram.io/d/63c6e8e5296d97641d7a4666
+
+Desenvolver esse tipo de documentação é um passo mais avançado nos conhecimentos de banco de dados, então não se preocupe nesse momento!
+
