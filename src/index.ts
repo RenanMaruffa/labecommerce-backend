@@ -1,7 +1,10 @@
-import { addProduct, createPurchase, getAllProducts, getAllPurchasesFromUserId, getAllUsers, getProductById, products, purchase, queryProductsByName, user } from "./database";
+import { products, purchase, user } from "./database";
 import { Categorias, Tcliente, Tcompra, Tproduto } from "./types";
 import express, { Request, Response } from 'express'
 import cors from 'cors';
+import { db } from "./database/knex";
+
+
 
 const app = express();
 app.use(express.json());
@@ -43,107 +46,64 @@ app.listen(3003, () => {
 // console.log("----------------------------------------------------------------------------------------------------------------------------------");
 
 
-//Endpoint Ping Pong
-app.get("/ping", (req: Request, res: Response) => {
-    res.send("Pong!")
-});
-
-//Endpoint getAllUsers - Validado!
-
-app.get("/users", (req: Request, res: Response) => {
+//Endpoint Ping Pong - Validado!
+app.get("/ping", async (req: Request, res: Response) => {
     try {
+        res.status(200).send({ message: "Pong!" });
+    } catch (error) {
+        console.log(error);
 
-        res.status(200).send(user)
-
-    } catch (error: any) {
-        console.log(error)
-
-        if (res.statusCode === 200) {
+        if (req.statusCode === 200) {
             res.status(500)
-        }
-
-        res.send(error.message);
-    }
-});
-
-//Endpoint  getAllProducts - Validado!
-
-app.get("/products", (req: Request, res: Response) => {
-
-    try {
-
-        res.status(200).send(products)
-
-    } catch (error: any) {
-        console.log(error)
-
-        if (res.statusCode === 200) {
-            res.status(500)
-        }
-
-        res.send(error.message);
-    }
-});
-
-//Endpoint searchProductByName - Validado!
-
-app.get("/products/search", (req: Request, res: Response) => {
-    try {
-
-        const q = req.query.q as string
-        // const result = q ?
-        //     products.filter(product => product.name.toLowerCase().includes(q.toLowerCase()))
-        //     :
-        //     products
-
-        const result = products.filter((item) => item.name.toLowerCase().includes(q.toLowerCase())
-        );
-
-        if (q !== undefined) {
-            if (q.length < 1) {
-                res.status(400)
-                throw new Error("O 'id' deve ter, pelo menos, 1 caractere.")
-            }
-        }
-
-        res.status(200).send(result)
-
-    } catch (error: any) {
-        console.log(error)
-
-        if (res.statusCode === 200) {
-            res.status(500)
-        }
-
-        res.send(error.message);
-    }
-});
-
-//Endpoint createUser - Validado!
-
-app.post("/users", (req: Request, res: Response) => {
-
-    try {
-        // const id: string = req.body.id
-        // const email: string = req.body.email
-        // const password: string = req.body.password
-
-        const { id, email, password }: Tcliente = req.body
-
-        if (id.length < 4) {
-            res.status(400)
-            throw new Error("O 'id' do usuário deve conter, pelo menos, 4 caracteres.")
         };
 
-        if (!id || !email || !password) {
-            res.status(400)
-            throw new Error("Preencha todas a informações para cadastro do novo usuário ('id' 'email' e 'password').")
+        if (error instanceof Error) {
+            res.send(error.message)
+        } else {
+            res.send("Erro inesperado")
+        };
+    };
+})
+
+//Endpoint getAllUsers - Validado! KNEX OK!
+
+app.get("/users", async (req: Request, res: Response) => {
+
+    try {
+        //KNEX
+        const result = await db("users");
+
+        res.status(200).send(result);
+
+    } catch (error: any) {
+        console.log(error);
+
+        if (res.statusCode === 200) {
+            res.status(500)
         };
 
-        if (id !== undefined) {
-            if (typeof id !== "string") {
+        res.send("Erro inesperado");
+    };
+});
+
+//Endpoint createUser - Validado! KNEX OK!
+
+app.post("/users", async (req: Request, res: Response) => {
+    try {
+
+        const { name, email, password } = req.body;
+
+        const id = Math.floor(Date.now() * Math.random()).toString(36);
+
+        if (!name || !email || !password) {
+            res.status(400)
+            throw new Error("Preencha todas a informações para cadastro do novo usuário ('name' 'email' e 'password').")
+        };
+
+        if (name !== undefined) {
+            if (typeof name !== "string") {
                 res.status(400);
-                throw new Error("O 'id' do usuário deve ser do tipo 'string'.");
+                throw new Error("O 'name' do usuário deve ser do tipo 'string'.");
             };
         };
 
@@ -169,64 +129,69 @@ app.post("/users", (req: Request, res: Response) => {
             };
         };
 
-        const searchId = user.find((user) => user.id === id);
+        //RAW
+        // const [searchEmailClone] = await db.raw(`
+        // SELECT * FROM users
+        // WHERE email = ?
+        // `, [email]);
 
-        if (id !== undefined) {
-            if (searchId) {
-                res.status(400)
-                throw new Error("Já existe uma conta com este 'id'.")
-            };
+        const [searchEmailClone] = await db("users").select("*").where({ email: email });
+
+        if (searchEmailClone) {
+            res.status(400);
+            throw new Error("Já existe uma conta com este 'email'.");
         };
 
-        const newUser: Tcliente = { id, email, password };
+        //RAW
+        // await db.raw(`
+        // INSERT INTO users (id, name, email, password)
+        // VALUES ("${id}", "${name}", "${email}", "${password}") 
+        // `)
 
-        user.push(newUser)
-        console.log("Usuarios", user);
-        res.status(201).send("Usuário cadastrado com sucesso!")
+        //KNEX MODO 1
+        // await db.insert({
+        //     id:id,
+        //     name:name,
+        //     email:email,
+        //     password:password
+        // }).into ("users")
+
+        //KNEX MODO 2
+        const newUser = {
+            id: id,
+            name: name,
+            email: email,
+            password: password
+        };
+
+        await db("users").insert(newUser);
+
+
+        res.status(201).send("Usuário cadastrado com sucesso!");
 
     } catch (error: any) {
-        console.log(error)
+        console.log(error);
 
         if (res.statusCode === 200) {
             res.status(500)
-        }
+        };
 
         res.send(error.message);
-    }
+    };
 });
 
-//Endpoint createProduct - Validado!
+//Endpoint createProduct - Validado! KNEX OK!
 
-app.post("/products", (req: Request, res: Response) => {
+app.post("/products", async (req: Request, res: Response) => {
 
     try {
-        // const id: string = req.body.id
-        // const name: string = req.body.name
-        // const price: number = req.body.price
-        // const category: Categorias = req.body.category
+        const { name, price, category, description, imageUrl } = req.body;
 
-        const { id, name, price, category }: Tproduto = req.body
+        const id = Math.floor(Date.now() * Math.random()).toString(36);
 
-        if (id.length < 4) {
+        if (!name || !price || !category || !description || !imageUrl) {
             res.status(400)
-            throw new Error("O 'id' do produto deve conter, pelo menos, 4 caracteres.")
-        };
-
-        if (id[0] !== "p") {
-            res.status(400)
-            throw new Error("O 'id' do produto deve iniciar com a letra 'p'.")
-        };
-
-        if (!id || !name || !price || !category) {
-            res.status(400)
-            throw new Error("Preencha todas a informações para cadastro do novo produto ('id' 'name', 'price', e 'category').")
-        };
-
-        if (id !== undefined) {
-            if (typeof id !== "string") {
-                res.status(400);
-                throw new Error("O 'id' do produto deve ser do tipo 'string'.");
-            };
+            throw new Error("Preencha todas a informações para cadastro do novo produto ('name', 'price', 'category', 'description' e 'imageUrl'")
         };
 
         if (name !== undefined) {
@@ -243,15 +208,6 @@ app.post("/products", (req: Request, res: Response) => {
             };
         };
 
-        const searchId = products.find((product) => product.id === id);
-
-        if (id !== undefined) {
-            if (searchId) {
-                res.status(400)
-                throw new Error("Já existe um produto com este 'id'.")
-            };
-        };
-
         if (category !== undefined) {
             if (
                 category !== Categorias.ACCESSORIES &&
@@ -262,74 +218,25 @@ app.post("/products", (req: Request, res: Response) => {
             };
         };
 
-        const newProduct: Tproduto = { id, name, price, category };
+        //RAW
+        // await db.raw(`
+        // INSERT INTO products (id, name, price, category, description, imageUrl)
+        // VALUES ("${id}", "${name}", ${price}, "${category}", "${description}", "${imageUrl}") 
+        // `)
 
-        products.push(newProduct)
-        console.log("Produtos", products);
-        res.status(201).send("Produto cadastrado com sucesso!")
-
-    } catch (error: any) {
-        console.log(error)
-
-        if (res.statusCode === 200) {
-            res.status(500)
-        }
-
-        res.send(error.message);
-    }
-});
-
-//Endpoint createPurchase - Validado!!
-
-app.post("/purchases", (req: Request, res: Response) => {
-
-    const { userId, productId, quantity, totalPrice }: Tcompra = req.body;
-
-    try {
-
-        if (!userId) {
-            res.status(400);
-            throw new Error("O 'userId' não foi informado.");
-        };
-        if (!productId) {
-            res.status(400);
-            throw new Error("O 'productId' não foi informado.");
-        };
-        if (!quantity) {
-            res.status(400);
-            throw new Error("O 'quantity' não foi informado.");
-        };
-        if (!totalPrice) {
-            res.status(400);
-            throw new Error("O 'totalPrice' não foi informado.");
+        //KNEX MODO 2
+        const newProduct = {
+            id: id,
+            name: name,
+            price: price,
+            category: category,
+            description: description,
+            imageUrl: imageUrl
         };
 
-        const searchUserId = user.find((user) => user.id === userId)
+        await db("products").insert(newProduct);
 
-        if (!searchUserId) {
-            res.status(400)
-            throw new Error("O 'userId' deve corresponder à 'id' de um usuário cadastrado.")
-        };
-
-        const searchProductId = products.find((products) => products.id === productId)
-
-        if (!searchProductId) {
-            res.status(400)
-            throw new Error("O 'productId' deve corresponder à 'id' de um produto cadastrado.")
-        };
-
-        if (searchProductId) {
-            if (searchProductId.price * quantity !== totalPrice) {
-                res.status(400);
-                throw new Error("O valor total da compra não corresponde ao valor do produto vezes a quantidade informada");
-            };
-        };
-
-        const newPurchase: Tcompra = { userId, productId, quantity, totalPrice };
-
-        purchase.push(newPurchase);
-        res.status(201).send("Compra realizada com sucesso!");
-
+        res.status(201).send("Produto cadastrado com sucesso!");
 
     } catch (error: any) {
         console.log(error);
@@ -342,46 +249,347 @@ app.post("/purchases", (req: Request, res: Response) => {
     };
 });
 
+//Endpoint  getAllProducts - Validado! KNEX OK! - Get all products funcionalidade 1
 
-//Endpoint getProductsById - Validado!
-
-app.get("/products/:id", (req: Request, res: Response) => {
+app.get("/products", async (req: Request, res: Response) => {
 
     try {
-        const id: string = req.params.id;
-        const result: Tproduto = products.find((item) => item.id === id)
+        const result = await db("products");
 
-        if (!result) {
+        res.status(200).send(result);
+
+    } catch (error: any) {
+        console.log(error);
+
+        if (res.statusCode === 200) {
+            res.status(500)
+        };
+
+        res.send("Erro inesperado");
+    };
+});
+
+//Endpoint searchProductByName - Validado! KNEX OK! - Get all products funcionalidade 2
+
+app.get("/products/search", async (req: Request, res: Response) => {
+    try {
+        const q = req.query.q;
+
+        if (!q) {
             res.status(400)
-            throw new Error("Este 'id' não existe")
-        }
+            throw new Error("Preencha algo para ser realizar a busca")
+        };
+
+        if (typeof q !== "string") {
+            res.status(400)
+            throw new Error("Sua busca deve ser em formato de texto")
+        };
+
+        // RAW
+        //     const result = await db.raw(`
+        //     SELECT * FROM products
+        //     WHERE name LIKE "%${q}%";
+        // `)
+
+        //KNEX
+        const result = await db("products").where("name", "LIKE", `%${q}%`);
+
+        if (!result.length) {
+            res.status(400)
+            throw new Error("Caractere não encontrado. Sua busca deve ser em formato de texto")
+        };
 
         res.status(200).send(result)
 
     } catch (error: any) {
-        console.log(error)
 
         if (res.statusCode === 200) {
             res.status(500)
-        }
+        };
 
         res.send(error.message);
-    }
+    };
 });
 
-//Endpoint getUserPurchasesByUserId - Validado!
+//Endpoint getProductsById - Validado! KNEX OK!
 
-app.get("/users/:id/purchases", (req: Request, res: Response) => {
+app.get("/products/:id", async (req: Request, res: Response) => {
 
     try {
-        const id: string = req.params.id
-        const result: Tcompra = purchase.find((item) => item.userId === id)
-        console.log(id);
+        const idToSearch: string = req.params.id;
+        const [searchProduct] = await db("products").where({ id: idToSearch });
+
+        if (!searchProduct) {
+            res.status(400)
+            throw new Error("Preencha algo para ser realizar a busca")
+        };
+
+        if (!idToSearch) {
+            res.status(400)
+            throw new Error("Este 'id' não existe")
+        };
+
+        res.status(200).send(searchProduct);
+
+    } catch (error: any) {
+        console.log(error);
+
+        if (res.statusCode === 200) {
+            res.status(500)
+        };
+
+        res.send(error.message);
+    };
+});
+
+//Endpoint editProductById - Validado! KNEX OK!
+
+app.put("/products/:id", async (req: Request, res: Response) => {
+
+    try {
+
+        const id = req.params.id;
+
+        const { newName, newPrice, newCategory, newDescription, newImageUrl } = req.body;
+
+        //RAW
+        // const [findProduct] = await db.raw(`
+        // SELECT * FROM products
+        // WHERE id = '${id}'
+        // `);
+
+        //KNEX MODO 1
+        // const [findProduct] = await db.select("*").from("products").where({ id: id })
+
+        ////KNEX MODO 2
+        const [findProduct] = await db("products").where({ id: id });
+
+        if (!findProduct) {
+            res.status(400)
+            throw new Error("Produto não encontrado, Verifique o 'id'.")
+        };
+
+        // if (newName === undefined || newPrice === undefined || newCategory === undefined || newDescription === undefined || newImageUrl === undefined) {
+        //     res.status(400);
+        //     throw new Error("Dados inválidos. Pelo menos um valor deve ser fornecido para atualizar o produto.");
+        // };
+
+        if (!newName && !newPrice && !newCategory && !newDescription && !newImageUrl) {
+            res.status(400);
+            throw new Error("Preencha o campo para atualizar o produto.");
+        };
+
+        if (newName !== undefined && typeof newName !== "string") {
+            res.status(400);
+            throw new Error("O campo 'newName' deve ser uma string.");
+        };
+
+        if (newPrice !== undefined && typeof newPrice !== "number") {
+            res.status(400);
+            throw new Error("O campo 'newPrice' deve ser um número.");
+        };
+
+        if (newDescription !== undefined && typeof newDescription !== "string") {
+            res.status(400);
+            throw new Error("O campo 'newDescription' deve ser uma string.");
+        };
+
+        if (newImageUrl !== undefined && typeof newImageUrl !== "string") {
+            res.status(400);
+            throw new Error("O campo 'newImageUrl' deve ser uma string.");
+        };
+
+        if (newCategory !== undefined && ![Categorias.ACCESSORIES, Categorias.CLOTHES_AND_SHOES, Categorias.ELECTRONICS].includes(newCategory)) {
+            res.status(400);
+            throw new Error("O campo 'category' deve conter um valor válido: 'ACCESSORIES', 'CLOTHES_AND_SHOES' ou 'ELECTRONICS'.");
+        };
+
+        //RAW
+        //     await db.raw(`
+        //     UPDATE products
+        //     SET
+        //     name = '${newName || findProduct.name}',
+        //     price =  ${newPrice || findProduct.price},
+        //     category = '${newCategory || findProduct.category}',
+        //     description = '${newDescription || findProduct.description}',
+        //     imageUrl = '${newImageUrl || findProduct.imageUrl}'
+        //     WHERE 
+        //     id = '${id}';
+        // `);
+
+        await db("products").where({ id: id }).update({
+            name: newName || findProduct.name,
+            price: newPrice || findProduct.price,
+            category: newCategory || findProduct.category,
+            description: newDescription || findProduct.description,
+            imageUrl: newImageUrl || findProduct.imageUrl
+        });
+
+        res.status(200).send("Produto atualizado com sucesso")
+
+    } catch (error: any) {
+        console.log(error);
+
+        if (res.statusCode === 200) {
+            res.status(500)
+        };
+
+        res.send(error.message);
+    };
+});
+
+//Endpoint createPurchase - Validado! KNEX OK!
+
+app.post("/purchases", async (req: Request, res: Response) => {
+    try {
+
+        const purchase_id = Math.floor(Date.now() * Math.random()).toString(36);
+
+        const { buyer, buyer_id, total_price, productId, quantity } = req.body;
+
+        if (buyer === null || buyer === undefined || buyer_id === null || buyer_id === undefined || total_price === null || total_price === undefined || productId === null || productId === undefined || quantity === null || quantity === undefined) {
+            return res.sendStatus(400).send("Preencha todos os campos para criar a compra.");
+        }
+
+        // const [findId] = await db("purchases").where({ id: id });
+
+        // if (findId && findId.length > 0) {
+        //     res.status(400);
+        //     throw new Error("O 'id' já existe. Insira um novo 'id'.");
+        // };
+
+        const [findBuyer] = await db("users").where({ id: buyer_id });
+
+        if (!findBuyer || findBuyer.length === 0) {
+            res.status(400)
+            throw new Error("O 'buyer' deve corresponder à um 'id' de um usuário cadastrado.");
+        };
+
+        if (!total_price) {
+            res.status(400);
+            throw new Error("Total do produto inexistente, por favor digite um total válido.")
+        };
+
+        if (typeof total_price !== "number") {
+            res.status(400);
+            throw new Error("o total do produto tem que ser um número.")
+        };
+
+        await db("purchases").insert({ id: purchase_id, buyer: buyer, buyer_id: buyer_id, total_price: total_price });
+
+        await db("purchases_products").insert({ purchase_id: purchase_id, product_id: productId, quantity: quantity });
+
+        res.status(201).send("Compra realizada com sucesso!");
+
+    } catch (error: any) {
+        console.log(error);
+
+        if (res.statusCode === 200) {
+            res.status(500)
+        };
+
+        res.send(error.message);
+    };
+});
+
+// Endpoint deletePurchaseById - Validado! KNEX OK!
+
+app.delete("/purchases/:id", async (req: Request, res: Response) => {
+
+    try {
+        const idToDelete = req.params.id;
+        const [searchProduct] = await db("purchases").where({ id: idToDelete });
+
+        if (searchProduct) {
+            await db.delete().from("purchases_products").where({ purchase_id: idToDelete });
+            await db.delete().from("purchases").where({ id: idToDelete });
+
+        } else {
+            res.status(404)
+            throw new Error("Compra não encontrada ou já deletada anteriormente. Verifique o 'id'.")
+        };
+
+        res.status(200).send("Compra deletada com sucesso");
+
+    } catch (error: any) {
+        console.log(error);
+
+        if (res.statusCode === 200) {
+            res.status(500)
+        };
+
+        res.send(error.message);
+    };
+});
+
+//Endpoint getUserPurchaseById - Validado! KNEX OK!
+
+app.get("/users/:id/purchases", async (req: Request, res: Response) => {
+
+    try {
+        const idToSearch: string = req.params.id;
+        const [searchPurchases] = await db("purchases").where({ id: idToSearch });
+
+        if (searchPurchases) {
+                const products = await db("purchases_products")
+                .select(
+                    "products.id AS productId",
+                    "products.name AS productName",
+                    "products.price AS productPrice",
+                    "products.description AS productDescription",
+                    "products.imageUrl AS imageUrl",
+                    "purchases_products.quantity AS quantity"
+                )
+                .join(
+                    "purchases",
+                    "purchases_products.purchase_id",
+                    "=",
+                    "purchases.id"
+                )
+                .join(
+                    "products",
+                    "purchases_products.product_id",
+                    "=",
+                    "products.id"
+                ).where("purchases.buyer_id", "=", `${searchPurchases.buyer_id}`)
+
+                console.log(products)
+
+            res.status(200).send({ ...searchPurchases, products })
+
+        } else {
+            res.status(400)
+            throw new Error("'id' incorreto. Insira um 'id' de compra, iniciado com 'PC' seguido de 3 numeros, para realizar uma nova busca.")
+        }
+
+    } catch (error: any) {
+        console.log(error);
+
+        if (res.statusCode === 200) {
+            res.status(500)
+        };
+
+        res.send(error.message);
+    };
+});
+
+//Endpoint getUserPurchasesByUserId - Validado! KNEX OK!
+
+app.get("/users/:id/purchases", async (req: Request, res: Response) => {
+
+    try {
+        const id: string = req.params.id;
+        const [result] = await db("users").where({ buyer: id });
 
         if (!result) {
             res.status(400)
             throw new Error("Este 'usuario' não existe")
-        }
+        };
+
+        if (!id) {
+            res.status(400)
+            throw new Error("Este 'id' não existe")
+        };
 
         res.status(200).send(result)
 
@@ -390,46 +598,27 @@ app.get("/users/:id/purchases", (req: Request, res: Response) => {
 
         if (res.statusCode === 200) {
             res.status(500)
-        }
-
-        res.send(error.message);
-    }
-});
-
-//Endpoint deleteUserById - Validado!!
-
-app.delete("/user/:id", (req: Request, res: Response) => {
-
-    try {
-        const id: string = req.params.id
-        const searchUserId = user.find((user) => user.id === id);
-
-        if (!searchUserId) {
-            res.status(404);
-            throw new Error("Usuário não existe. Verifique o 'id'");
-        }
-
-        const index = user.findIndex((user) => user.id === id);
-
-        if (index) {
-            user.splice(index, 1);
         };
 
-        // const index: number = user.findIndex((item) => item.id === id)
+        res.send(error.message);
+    };
+});
 
-        // let message: string
-        // if (index > 0) {
-        //     user.splice(index, 1)
-        //     message = "User deletado com sucesso!"
-        // } else {
-        //     message = "Nenhum usuario encontrado!"
-        // }
-        // console.log(user);
+//Endpoint deleteUserById - Validado! KNEX OK!
 
-        // if (!index) {
-        //     res.status(400)
-        //     throw new Error("Este 'usuario' não existe")
-        // }
+app.delete("/user/:id", async (req: Request, res: Response) => {
+
+    try {
+        const idToDelete: string = req.params.id;
+        const [searchUserId] = await db("users").where({ id: idToDelete });
+
+        if (searchUserId) {
+            await db.delete().from("users").where({ id: idToDelete });
+
+        } else {
+            res.status(404)
+            throw new Error("Usuario não encontrado ou já deletado anteriormente. Verifique o 'id'.")
+        };
 
         res.status(200).send("Usuário apagado com sucesso");
 
@@ -438,54 +627,7 @@ app.delete("/user/:id", (req: Request, res: Response) => {
 
         if (res.statusCode === 200) {
             res.status(500)
-        }
-
-        res.send(error.message);
-    }
-});
-
-//findIndex retorna apenas o valor do index ao contrario do find que retorna um {} inteiro
-//splice remove numeros especificos de um []
-
-// Endpoint deleteProductById - Validado!!
-
-app.delete("/products/:id", (req: Request, res: Response) => {
-
-    try {
-
-        const id: string = req.params.id
-        const searchProduct = products.find((product) => product.id === id)
-
-        if (!searchProduct) {
-            res.status(400)
-            throw new Error("Produto não encontrado. Verifique o 'id'.")
-        }
-
-        const index = products.findIndex((product) => product.id === id)
-        if (index) {
-            products.splice(index, 1);
-        }
-
-        res.status(200).send("Produto apagado com sucesso");
-
-        // const index: number = products.findIndex((item) => item.id === id)
-
-        // let message: string
-        // if (index > 0) {
-        //     products.splice(index, 1)
-        //     message = "Produto deletado com sucesso!"
-        // } else {
-        //     message = "Produto não encontrado"
-        // }
-        // console.log(products);
-        // res.status(200).send(message)
-
-    } catch (error: any) {
-        console.log(error)
-
-        if (res.statusCode === 200) {
-            res.status(500)
-        }
+        };
 
         res.send(error.message);
     };
@@ -494,54 +636,95 @@ app.delete("/products/:id", (req: Request, res: Response) => {
 //findIndex retorna apenas o valor do index ao contrario do find que retorna um {} inteiro
 //splice remove numeros especificos de um []
 
-//Endpoint editUserById - Validado!!
+// Endpoint deleteProductById - Validado! KNEX OK!
 
-app.put("/users/:id", (req: Request, res: Response) => {
+app.delete("/products/:id", async (req: Request, res: Response) => {
 
     try {
 
-        const id: string = req.params.id
-        const newEmail: string = req.body.newEmail
-        const newPassword: string = req.body.newPassword
+        const idToDelete: string = req.params.id;
+        const searchProduct = await db("products").where({ id: idToDelete });
 
-        const findUser = user.find((user) => user.id === id)
+        if (searchProduct) {
+            await db.delete().from("purchases_products").where({ product_id: idToDelete })
+            //precisa deletar da lista de comprados primeiro, pra depois remover da lista de produtos. Se não dá erro
+            await db.delete().from("products").where({ id: idToDelete });
 
-        console.log("FindUser", findUser);
+        } else {
+            res.status(404)
+            throw new Error("Produto não encontrado ou já deletado anteriormente. Verifique o 'id'.")
+        };
+
+        res.status(200).send("Produto apagado com sucesso");
+
+    } catch (error: any) {
+        console.log(error)
+
+        if (res.statusCode === 200) {
+            res.status(500)
+        };
+
+        res.send(error.message);
+    };
+});
+
+//findIndex retorna apenas o valor do index ao contrario do find que retorna um {} inteiro
+//splice remove numeros especificos de um []
+
+//Endpoint editUserById - Validado! KNEX OK!
+
+app.put("/users/:id", async (req: Request, res: Response) => {
+
+    try {
+
+        const id = req.params.id
+        const { newName, newEmail, newPassword } = req.body;
+
+        const [findUser] = await db("users").where({ id: id });
 
         if (!findUser) {
             res.status(400)
-            throw new Error("Usuario não encontrado. Verifique o 'id'.")
-        }
+            throw new Error("Usuário não encontrado. Verifique o 'id'.")
+        };
+
+        if (!newName && !newEmail && !newPassword) {
+            res.status(400);
+            throw new Error("Preencha pelo menos um campo para atualizar o usuário.");
+        };
+
+        if (!id) {
+            res.status(400)
+            throw new Error("ID não encontrado. Verifique o 'id'.")
+        };
+
+        // if (!newName) {
+        //     res.status(400)
+        //     throw new Error("Nome inexistente, por favor digite um Nome de usuário válido.")
+        // }       
 
         if (newEmail !== undefined) {
             if (typeof newEmail !== "string") {
                 res.status(400)
                 throw new Error("O 'email' deve ser do tipo 'string'.")
             }
-        }
-
-        const searchEmail = newEmail.match("@")
-
-        if (newEmail !== undefined) {
-            if (!searchEmail) {
-                res.status(400);
-                throw new Error("O 'email' não possui um formato válido.");
-            };
         };
 
-        if (newPassword !== undefined) {
-            if (typeof newPassword !== "string") {
-                res.status(400)
-                throw new Error("O 'password' deve ser do tipo 'string'.")
-            }
-        }
+        const searchEmail = newEmail ? newEmail.match("@") : null
+        if (newEmail !== undefined && !searchEmail) {
+            res.status(400);
+            throw new Error("O 'email' não possui um formato válido.");
+        };
 
-        findUser.email = newEmail || findUser.email
-        findUser.password = newPassword || findUser.password
+        if (newPassword !== undefined && typeof newPassword !== "string") {
+            res.status(400)
+            throw new Error("O 'password' deve ser do tipo 'string'.")
+        };
 
-console.log("searchEmail", searchEmail);
-
-        console.log("FindUser", findUser);
+        await db("users").where({ id: id }).update({
+            name: newName || findUser.name,
+            email: newEmail || findUser.email,
+            password: newPassword || findUser.password
+        });
 
         res.status(200).send("Cadastro atualizado com sucesso")
 
@@ -550,70 +733,9 @@ console.log("searchEmail", searchEmail);
 
         if (res.statusCode === 200) {
             res.status(500)
-        }
-
-        res.send(error.message);
-    };
-});
-
-//Endpoint editProductById - Validado!!
-
-app.put("/products/:id", (req: Request, res: Response) => {
-
-    try {
-
-        const id: string = req.params.id
-        const newName: string = req.body.newName
-        const newPrice: number = req.body.newPrice
-        const newCategory: Categorias = req.body.newCategory
-
-        const findProduct = products.find((item) => item.id === id)
-
-        if (!findProduct) {
-            res.status(400)
-            throw new Error("Produto não encontrado, Verifique o 'id'.")
-        }
-
-        if (newName !== undefined) {
-            if (typeof newName !== "string") {
-                res.status(400)
-                throw new Error("O 'name' deve ser do tipo 'string'.")
-            }
-        }
-
-        if (newPrice !== undefined) {
-            if (typeof newPrice !== "number") {
-                res.status(400)
-                throw new Error("O 'price' deve ser do tipo 'number'.")
-            }
-        }
-
-        if (newCategory !== undefined) {
-            if (
-                newCategory !== Categorias.ACCESSORIES &&
-                newCategory !== Categorias.CLOTHES_AND_SHOES &&
-                newCategory !== Categorias.ELECTRONICS) {
-                res.status(400);
-                throw new Error("O campo 'category' deve conter um tipo válido: 'ACCESSORIES', 'CLOTHES_AND_SHOES' ou 'ELECTRONICS'.");
-            };
         };
 
-        console.log(findProduct);
-
-        findProduct.name = newName || findProduct.name
-        findProduct.price = newPrice || findProduct.price
-        findProduct.category = newCategory || findProduct.category
-
-        console.log(findProduct);
-        res.status(200).send("Produto atualizado com sucesso")
-
-    } catch (error: any) {
-        console.log(error)
-
-        if (res.statusCode === 200) {
-            res.status(500)
-        }
-
         res.send(error.message);
     };
 });
+

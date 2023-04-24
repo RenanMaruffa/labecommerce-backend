@@ -71,35 +71,35 @@ export const purchase: Tcompra[] = [
 
 
 
-function createUser(id: string, email: string, password: string) {
-    const newUser: Tcliente = { id, email, password }
-    user.push(newUser)
-    console.log("Cadastro de usuario realizado com sucesso!");
-};
+// function createUser(id: string, email: string, password: string) {
+//     const newUser: Tcliente = { id, email, password }
+//     user.push(newUser)
+//     console.log("Cadastro de usuario realizado com sucesso!");
+// };
 
-createUser("u004", "renan@lala.com", "goku")
+// createUser("u004", "renan@lala.com", "goku")
 
-export function getAllUsers() {
-    console.log(user);
-};
+// export function getAllUsers() {
+//     console.log(user);
+// };
 
-export function addProduct(id: string, name: string, price: number, category: Categorias) {
-    const newProduct: Tproduto = { id, name, price, category }
-    products.push(newProduct)
-    console.log("Cadastro de produto realizado com sucesso!");
-};
+// export function addProduct(id: string, name: string, price: number, category: Categorias) {
+//     const newProduct: Tproduto = { id, name, price, category }
+//     products.push(newProduct)
+//     console.log("Cadastro de produto realizado com sucesso!");
+// };
 
-export function getAllProducts(): void {
-    console.log(products);
-};
+// export function getAllProducts(): void {
+//     console.log(products);
+// };
 
-export function getProductById(id: string) {
-    products.find((produtoId) => {
-        if (produtoId.id === id) {
-            return console.log(produtoId)
-        }
-    })
-};
+// export function getProductById(id: string) {
+//     products.find((produtoId) => {
+//         if (produtoId.id === id) {
+//             return console.log(produtoId)
+//         }
+//     })
+// };
 
 // export function queryProductsByName(name:string) {
 //     products.find((produtoName) => {
@@ -109,9 +109,9 @@ export function getProductById(id: string) {
 //     })      
 // }
 
-export function queryProductsByName(q: string): Tproduto[] {
-    return products.filter((prod) => prod.name.toLowerCase().includes(q.toLowerCase()))
-};
+// export function queryProductsByName(q: string): Tproduto[] {
+//     return products.filter((prod) => prod.name.toLowerCase().includes(q.toLowerCase()))
+// };
 
 
 // export const queryProductsByName = (q:string) => {
@@ -122,10 +122,10 @@ export function queryProductsByName(q: string): Tproduto[] {
 // como é case sensitive, precisa do toLowerCase(   )
 // como ta usando FILTER (metodo usado em ARRAY) tem q colocar um array na saida 
 
-export function createPurchase(userId: string, productId: string, quantity: number, totalPrice: number): string {
-    purchase.push({ userId, productId, quantity, totalPrice })
-    return "Compra Realizada com sucesso!"
-};
+// export function createPurchase(userId: string, productId: string, quantity: number, totalPrice: number): string {
+//     purchase.push({ userId, productId, quantity, totalPrice })
+//     return "Compra Realizada com sucesso!"
+// };
 
 // export const createPurchase = (userId: string, productId: string, quantity: number, totalPrice: number) : string => {
 //     const newPurchase = {userId, productId, quantity, totalPrice}
@@ -138,9 +138,9 @@ export function createPurchase(userId: string, productId: string, quantity: numb
 // Se usar console.log, pode chamar a função direto
 
 
-export function getAllPurchasesFromUserId(userIdToSearch: string): Tcompra[] {
-    return purchase.filter(purchase => purchase.userId === userIdToSearch)
-};
+// export function getAllPurchasesFromUserId(userIdToSearch: string): Tcompra[] {
+//     return purchase.filter(purchase => purchase.userId === userIdToSearch)
+// };
 
 // export const getAllPurchasesFromUserId = (userIdToSearch: string) =>{
 //     return purchase.filter(user => user.userId === userIdToSearch)

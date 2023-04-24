@@ -2,32 +2,40 @@
 
 CREATE TABLE users (
     id TEXT UNIQUE NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    createdAt TEXT DEFAULT(DATETIME('now', 'localtime'))
 );
 
 SELECT * FROM users;
 
+DROP TABLE users;
+
 INSERT INTO users VALUES
-("U001", "cliente1@laala.com", "123456"),
-("U002", "cliente2@laala.com", "6789"),
-("U003", "cliente3@laala.com", "9012");
+("U001", "Renan", "cliente1@laala.com", "123456", (DATETIME('now', 'localtime'))),
+("U002", "Nathalia", "cliente2@laala.com", "6789", (DATETIME('now', 'localtime'))),
+("U003", "Gabriel", "cliente3@laala.com", "9012", (DATETIME('now', 'localtime')));
 
 CREATE TABLE products (
     id TEXT UNIQUE NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
     price REAL NOT NULL,
-    category TEXT NOT NULL
+    category TEXT NOT NULL,
+    description TEXT NOT NULL,
+    imageUrl TEXT NOT NULL
 );
+
+DROP TABLE products;
 
 SELECT * FROM products;
 
 INSERT INTO products VALUES 
-    ("P001", "Memoria Ram", 125.000, "ELECTRONICS"),
-    ("P002", "Placa Mãe", 95.000, "ELECTRONICS"),
-    ("P003", "Tenis", 15.000, "CLOTHES_AND_SHOES"),
-    ("P004", "Pulseira", 5.000, "ACCESSORIES"),
-    ("P005", "Moleton", 15.000, "CLOTHES_AND_SHOES");
+    ("P001", "Memoria Ram", 125.000, "ELECTRONICS", "Memorias GSkil DDR4", "https://adrenaline.com.br/uploads/2021/10/29/71792/g_skill-trident-z5-ddr5-6800-mhz(2).jpg"),
+    ("P002", "Placa Mãe", 95.000, "ELECTRONICS", "Placa Asus Rampage Extreme", "https://adrenaline.com.br/uploads/chamadas/asus_rampage_iv_extreme_item.jpg"),
+    ("P003", "Tenis", 15.000, "CLOTHES_AND_SHOES", "Tenis Puma", "https://www.espacocon.com.br/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/b/y/by3ua8b87fzkswrpurmeam54pgarwvbqwa4y_450x600_fill_ffffff_1.jpg"),
+    ("P004", "Pulseira", 5.000, "ACCESSORIES", "Pulseira Titanio Pavanini", "https://pavanini.com/wp-content/uploads/2022/05/alcantraescovado-1-768x512.png"),
+    ("P005", "Moleton", 15.000, "CLOTHES_AND_SHOES", "Moleton Nike", "https://images.tcdn.com.br/img/img_prod/690339/moletom_nike_sb_icon_hoodie_khaki_10705_1_781359d38ba2a0875a5dc84a3dafdf16.jpg");
 
 
 -- Get All Users - retorna todos os usuários cadastrados
@@ -42,7 +50,7 @@ WHERE name LIKE "Pl%";
 
 -- Create User - crie um novo usuário e insere o item mockado na tabela users
 INSERT INTO users VALUES
-("U004", "cliente4@laala.com", "9090");
+("U004", "Antonio", "cliente4@laala.com", "9090", (DATETIME()));
 
 -- Create Product - crie um novo produto e insere o item mockado na tabela products
 INSERT INTO products VALUES
@@ -91,9 +99,10 @@ ORDER BY price ASC;
 
 CREATE TABLE purchases (
     id TEXT UNIQUE PRIMARY KEY NOT NULL,
+    buyer TEXT NOT NULL,
     total_price REAL NOT NULL,
-    paid INTEGER NOT NULL,
-    delivered_at TEXT,
+    createdAt TEXT NOT NULL DEFAULT(DATETIME('now', 'localtime')),
+    paid INTEGER NOT NULL DEFAULT(0),
     buyer_id TEXT NOT NULL,
     FOREIGN KEY (buyer_id) REFERENCES users (id)
 );
@@ -105,22 +114,24 @@ CREATE TABLE purchases (
 
 SELECT * FROM purchases;
 
-INSERT INTO purchases (id, total_price, paid, buyer_id) VALUES
-("PC001", 250.000, 0, "U001"),
-("PC002", 95.000, 1, "U001"),
-("PC003", 15.000, 1, "U002"),
-("PC004", 15.000, 1, "U002"),
-("PC005", 5.000, 1, "U003"),
-("PC006", 125.000, 1, "U003");
+DROP TABLE purchases;
+
+INSERT INTO purchases VALUES
+("PC001", "Renan", 250.000, (DATETIME('now', 'localtime')), 0, "U001"),
+("PC002", "Renan", 95.000, (DATETIME('now', 'localtime')), 0, "U001"),
+("PC003", "Nathalia", 15.000, (DATETIME('now', 'localtime')), 0, "U002"),
+("PC004", "Nathalia", 15.000, (DATETIME('now', 'localtime')), 0, "U002"),
+("PC005", "Gabriel", 5.000, (DATETIME('now', 'localtime')), 0, "U003"),
+("PC006", "Gabriel", 125.000, (DATETIME('now', 'localtime')), 0, "U003");
 
 UPDATE purchases SET
-delivered_at = (DATETIME())
+delivered_at = (DATETIME('now', 'localtime'))
 WHERE id = "PC001";
 
 SELECT * FROM purchases
 INNER JOIN users
 ON purchases.buyer_id = users.id
-WHERE users.id = "U001";
+WHERE users.id = "U002";
 
 CREATE TABLE purchases_products(
     purchase_id TEXT NOT NULL,
@@ -131,6 +142,8 @@ CREATE TABLE purchases_products(
 );
 
 SELECT * FROM purchases_products;
+
+DROP TABLE purchases_products;
 
 INSERT INTO purchases_products VALUES 
 ("PC001", "P001", 2),
@@ -146,11 +159,3 @@ SELECT * FROM purchases_products
 INNER JOIN products ON purchases_products.product_id = products.id
 INNER JOIN purchases ON purchases_products.purchase_id = purchases.id
 INNER JOIN users ON purchases.buyer_id = users.id;
-
-
-
-
-
-
-
-
