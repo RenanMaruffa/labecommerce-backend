@@ -33,3 +33,6 @@ https://dbdiagram.io/d/63c6e8e5296d97641d7a4666
     - [ ]  Get purchase by id
 
 - README.md
+
+# Documentação para referência
+https://documenter.getpostman.com/view/21151478/2s8ZDeSdbz
