@@ -573,36 +573,36 @@ app.get("/users/:id/purchases", async (req: Request, res: Response) => {
     };
 });
 
-//Endpoint getUserPurchasesByUserId - Validado! KNEX OK!
+// //Endpoint getUserPurchasesByUserId - Validado! KNEX OK!
 
-app.get("/users/:id/purchases", async (req: Request, res: Response) => {
+// app.get("/users/:id/purchases", async (req: Request, res: Response) => {
 
-    try {
-        const id: string = req.params.id;
-        const [result] = await db("users").where({ buyer: id });
+//     try {
+//         const id: string = req.params.id;
+//         const [result] = await db("users").where({ buyer: id });
 
-        if (!result) {
-            res.status(400)
-            throw new Error("Este 'usuario' não existe")
-        };
+//         if (!result) {
+//             res.status(400)
+//             throw new Error("Este 'usuario' não existe")
+//         };
 
-        if (!id) {
-            res.status(400)
-            throw new Error("Este 'id' não existe")
-        };
+//         if (!id) {
+//             res.status(400)
+//             throw new Error("Este 'id' não existe")
+//         };
 
-        res.status(200).send(result)
+//         res.status(200).send(result)
 
-    } catch (error: any) {
-        console.log(error)
+//     } catch (error: any) {
+//         console.log(error)
 
-        if (res.statusCode === 200) {
-            res.status(500)
-        };
+//         if (res.statusCode === 200) {
+//             res.status(500)
+//         };
 
-        res.send(error.message);
-    };
-});
+//         res.send(error.message);
+//     };
+// });
 
 //Endpoint deleteUserById - Validado! KNEX OK!
 
