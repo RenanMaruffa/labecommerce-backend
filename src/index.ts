@@ -576,16 +576,13 @@ app.get("/users/:id/purchases", async (req: Request, res: Response) => {
 // //Endpoint getUserPurchasesByUserId - Validado! KNEX OK!
 
 // app.get("/users/:id/purchases", async (req: Request, res: Response) => {
-
 //     try {
 //         const id: string = req.params.id;
 //         const [result] = await db("users").where({ buyer: id });
-
 //         if (!result) {
 //             res.status(400)
 //             throw new Error("Este 'usuario' não existe")
 //         };
-
 //         if (!id) {
 //             res.status(400)
 //             throw new Error("Este 'id' não existe")
@@ -599,7 +596,6 @@ app.get("/users/:id/purchases", async (req: Request, res: Response) => {
 //         if (res.statusCode === 200) {
 //             res.status(500)
 //         };
-
 //         res.send(error.message);
 //     };
 // });
