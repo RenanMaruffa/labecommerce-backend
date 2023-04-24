@@ -35,4 +35,4 @@ https://dbdiagram.io/d/63c6e8e5296d97641d7a4666
 - README.md
 
 # Documentação para referência
-https://documenter.getpostman.com/view/21151478/2s8ZDeSdbz
+https://documenter.getpostman.com/view/24823029/2s93Y5R1V2
